@@ -13,8 +13,9 @@
   - [ ] Flatten Data field
   - [ ] Convert to TableRow (Discipline is REPEATED and may not exist!)
   - [ ] Write to BigQuery
+- [ ] Create BigQuery view (to query current state of appointments)
 - [ ] Write README
-  - [ ] Architecture graph
+  - [ ] Architecture diagram
   - [ ] Design and decisions
   - [ ] Considerations
     - How you adapt to changes in schema?
