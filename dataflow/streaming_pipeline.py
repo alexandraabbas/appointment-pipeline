@@ -5,7 +5,6 @@ python -m streaming_pipeline
     --bigquery_table_for_failed_rows={project}:{datatset}.{table}
     --streaming
 """
-# from __future__ import absolute_import
 
 import argparse
 import logging
@@ -25,7 +24,7 @@ def parse(element):
 
 
 def tuple_to_dict(element):
-    return {"failed_row": json.dumps(element)}
+    return {"FailedRow": json.dumps(element)}
 
 
 class ValidateMessages(beam.DoFn):
@@ -38,9 +37,8 @@ class ValidateMessages(beam.DoFn):
             yield pvalue.TaggedOutput(self.OUTPUT_TAG, element)
 
 
-class FlattenMessages(beam.DoFn):
-    def process(self, element):
-        pass
+class WriteToBigQuery(beam.PTransform):
+    pass
 
 
 def run(argv=None):
@@ -50,12 +48,6 @@ def run(argv=None):
         dest="subscription",
         required=True,
         help='Input PubSub subscription of the form "projects/<PROJECT>/subscriptions/<SUBSCRIPTION>".',
-    )
-    parser.add_argument(
-        "--invalid_output_dir",
-        dest="invalid_output_dir",
-        required=True,
-        help="Output file to write invalid messages to.",
     )
     parser.add_argument(
         "--bigquery_table",
@@ -81,19 +73,22 @@ def run(argv=None):
         p
         | "ReadFromPubSub" >> ReadFromPubSub(subscription=known_args.subscription).with_output_types(bytes)
         | "ParseAndValidateMessages" >> beam.ParDo(ValidateMessages())
-            .with_outputs(ValidateMessage.OUTPUT_TAG, main="valid_messages"))
+            .with_outputs(ValidateMessages.OUTPUT_TAG, main="valid_messages"))
 
     valid_messages = messages["valid_messages"]
-    invalid_messages = messages[ValidateMessage.OUTPUT_TAG]
+    invalid_messages = messages[ValidateMessages.OUTPUT_TAG]
 
-    # This may not work without windowing, write to BigQuery instead?
-    invalid_messages | WriteToText(known_args.invalid_output_dir)
+    (invalid_messages 
+        | "TupleToDict" >> beam.Map(tuple_to_dict)
+        | "WriteFailedRowsToBigQuery" >> WriteToBigQuery(
+            known_args.bigquery_table_for_failed_rows,
+            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER))
 
     valid_messages | beam.FlatMap(lambda message: logging.info(message))
 
     failed_rows = (
         valid_messages 
-        | "FlattenMessages" >> beam.ParDo(FlattenMessages())
         | "WriteToBigQuery" >> WriteToBigQuery(
             known_args.bigquery_table,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
