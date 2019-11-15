@@ -37,8 +37,13 @@ class ValidateMessages(beam.DoFn):
             yield pvalue.TaggedOutput(self.OUTPUT_TAG, element)
 
 
-# class WriteToBigQuery(beam.PTransform):
-#     pass
+class WriteRowsToBigQuery(beam.PTransform):
+    def expand(self, pcoll, table_name):
+        return pcoll | "WriteToBigQuery" >> WriteToBigQuery(
+            table_name,
+            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
+            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
+        )
 
 
 def run(argv=None):
@@ -71,33 +76,31 @@ def run(argv=None):
     # yapf: disable
     messages = (
         p
-        | "ReadFromPubSub" >> ReadFromPubSub(subscription=known_args.subscription).with_output_types(bytes)
+        | "ReadFromPubSub" >> ReadFromPubSub(subscription=known_args.subscription)
+            .with_output_types(bytes)
         | "ParseAndValidateMessages" >> beam.ParDo(ValidateMessages())
             .with_outputs(ValidateMessages.OUTPUT_TAG, main="valid_messages"))
 
     valid_messages = messages["valid_messages"]
-    invalid_messages = messages[ValidateMessages.OUTPUT_TAG] | "InvalidMessages:TupleToDict" >> beam.Map(tuple_to_dict)
+    invalid_messages = messages[ValidateMessages.OUTPUT_TAG]
 
-    invalid_messages | "InvalidMessages:WriteToBigQuery" >> WriteToBigQuery(
-            known_args.bigquery_table_for_failed_rows,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER)
+    (invalid_messages 
+        | "InvalidMessages:TupleToDict" >> beam.Map(tuple_to_dict)
+        | "InvalidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(
+            known_args.bigquery_table_for_failed_rows))
 
     valid_messages | beam.FlatMap(lambda message: logging.info(message))
 
     failed_rows = (
         valid_messages 
-        | "ValidMessages:WriteToBigQuery" >> WriteToBigQuery(
-            known_args.bigquery_table,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER))
+        | "ValidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(known_args.bigquery_table))
 
-    failed_rows_pcoll = failed_rows["FailedRows"] | "FailedInserts:TupleToDict" >> beam.Map(tuple_to_dict)
+    failed_rows_pcoll = failed_rows["FailedRows"]
 
-    failed_rows_pcoll | "FailedInserts:WriteToBigQuery" >> WriteToBigQuery(
-            known_args.bigquery_table_for_failed_rows,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER)
+    (failed_rows_pcoll 
+        | "FailedInserts:TupleToDict" >> beam.Map(tuple_to_dict)
+        | "FailedInserts:WriteToBigQuery" >> WriteRowsToBigQuery(
+            known_args.bigquery_table_for_failed_rows))
     # yapf: enable
     result = p.run()
     result.wait_until_finish()
