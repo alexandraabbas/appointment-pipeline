@@ -38,7 +38,7 @@ class ValidateMessages(beam.DoFn):
 
 
 class WriteRowsToBigQuery(beam.PTransform):
-    def expand(self, pcoll, table_name):
+    def expand(self, pcoll, table_name=None):
         return pcoll | "WriteToBigQuery" >> WriteToBigQuery(
             table_name,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
@@ -87,18 +87,19 @@ def run(argv=None):
     (invalid_messages 
         | "InvalidMessages:TupleToDict" >> beam.Map(tuple_to_dict)
         | "InvalidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(
-            known_args.bigquery_table_for_failed_rows))
+            table_name=known_args.bigquery_table_for_failed_rows))
 
     failed_rows = (
         valid_messages 
-        | "ValidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(known_args.bigquery_table))
+        | "ValidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(
+            table_name=known_args.bigquery_table))
 
     failed_rows_pcoll = failed_rows["FailedRows"]
 
     (failed_rows_pcoll 
         | "FailedInserts:TupleToDict" >> beam.Map(tuple_to_dict)
         | "FailedInserts:WriteToBigQuery" >> WriteRowsToBigQuery(
-            known_args.bigquery_table_for_failed_rows))
+            table_name=known_args.bigquery_table_for_failed_rows))
     # yapf: enable
     result = p.run()
     result.wait_until_finish()
