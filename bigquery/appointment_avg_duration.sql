@@ -1,3 +1,4 @@
+-- Claculates average duration of events
 SELECT AVG(TIMESTAMP_DIFF(EndTimestampUtc, StartTimestampUtc, MINUTE)) AS AvgDuration
 FROM (
   SELECT 

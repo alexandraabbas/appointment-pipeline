@@ -1,3 +1,4 @@
+-- Finds latest rows for each AppointmentId, used for state_view BigQuery view
 SELECT * except (rank)
 FROM (
   SELECT 

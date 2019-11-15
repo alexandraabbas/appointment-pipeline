@@ -1,3 +1,4 @@
+-- Calculates average duration of appointments for each discipline
 SELECT 
     AVG(TIMESTAMP_DIFF(EndTimestampUtc, StartTimestampUtc, MINUTE)) AS AvgDuration,
     Discipline
