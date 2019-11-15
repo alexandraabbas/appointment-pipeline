@@ -37,8 +37,8 @@ class ValidateMessages(beam.DoFn):
             yield pvalue.TaggedOutput(self.OUTPUT_TAG, element)
 
 
-class WriteToBigQuery(beam.PTransform):
-    pass
+# class WriteToBigQuery(beam.PTransform):
+#     pass
 
 
 def run(argv=None):
@@ -76,14 +76,12 @@ def run(argv=None):
             .with_outputs(ValidateMessages.OUTPUT_TAG, main="valid_messages"))
 
     valid_messages = messages["valid_messages"]
-    invalid_messages = messages[ValidateMessages.OUTPUT_TAG]
+    invalid_messages = messages[ValidateMessages.OUTPUT_TAG] | "TupleToDict" >> beam.Map(tuple_to_dict)
 
-    (invalid_messages 
-        | "TupleToDict" >> beam.Map(tuple_to_dict)
-        | "WriteFailedRowsToBigQuery" >> WriteToBigQuery(
+    invalid_messages | "WriteFailedRowsToBigQuery" >> WriteToBigQuery(
             known_args.bigquery_table_for_failed_rows,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER))
+            create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER)
 
     valid_messages | beam.FlatMap(lambda message: logging.info(message))
 
