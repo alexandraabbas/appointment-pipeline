@@ -89,8 +89,6 @@ def run(argv=None):
         | "InvalidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(
             known_args.bigquery_table_for_failed_rows))
 
-    valid_messages | beam.FlatMap(lambda message: logging.info(message))
-
     failed_rows = (
         valid_messages 
         | "ValidMessages:WriteToBigQuery" >> WriteRowsToBigQuery(known_args.bigquery_table))
