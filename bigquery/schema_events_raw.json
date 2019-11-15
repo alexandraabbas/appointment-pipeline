@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Type",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "Data",
+    "type": "RECORD",
+    "mode": "NULLABLE",
+    "fields": [
+      {
+        "name": "AppointmentId",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "TimestampUtc",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "Discipline",
+        "type": "STRING",
+        "mode": "REPEATED"
+      }
+    ]
+  }
+]
