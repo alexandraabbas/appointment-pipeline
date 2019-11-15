@@ -51,7 +51,7 @@ Below screenshot shows the preview of `events_raw` table in BigQuery.
 
 You can run the Apache Beam pipeline either locally or on top of Dataflow in Google Cloud Platform.
 
-## Before running
+### Before running
 
 ```bash
 pip install -r requirements.txt
