@@ -108,3 +108,6 @@ venv.bak/
 
 # Data files
 appointment_events.txt
+
+# Mac
+.DS_Store
