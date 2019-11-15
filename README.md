@@ -1,6 +1,6 @@
 # Appointment streaming pipeline
 
-Apache Beam streaming pipeline built in Python 3.7. Takes JSON messages from Cloud PubSub, streams messages to BigQuery after performing a validation step.
+Apache Beam streaming pipeline built in Python. Takes JSON messages from Cloud PubSub, streams messages to BigQuery after performing a validation step.
 
 ## Solution design
 
@@ -50,6 +50,12 @@ Below screenshot shows the preview of `events_raw` table in BigQuery.
 ## Running instructions
 
 You can run the Apache Beam pipeline either locally or on top of Dataflow in Google Cloud Platform.
+
+## Before running
+
+```bash
+pip install -r requirements.txt
+```
 
 ### DirectRunner
 
