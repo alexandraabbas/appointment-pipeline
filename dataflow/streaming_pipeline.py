@@ -76,9 +76,9 @@ def run(argv=None):
             .with_outputs(ValidateMessages.OUTPUT_TAG, main="valid_messages"))
 
     valid_messages = messages["valid_messages"]
-    invalid_messages = messages[ValidateMessages.OUTPUT_TAG] | "TupleToDict" >> beam.Map(tuple_to_dict)
+    invalid_messages = messages[ValidateMessages.OUTPUT_TAG] | "InvalidMessages:TupleToDict" >> beam.Map(tuple_to_dict)
 
-    invalid_messages | "WriteFailedRowsToBigQuery" >> WriteToBigQuery(
+    invalid_messages | "InvalidMessages:WriteToBigQuery" >> WriteToBigQuery(
             known_args.bigquery_table_for_failed_rows,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
             create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER)
@@ -87,14 +87,14 @@ def run(argv=None):
 
     failed_rows = (
         valid_messages 
-        | "WriteToBigQuery" >> WriteToBigQuery(
+        | "ValidMessages:WriteToBigQuery" >> WriteToBigQuery(
             known_args.bigquery_table,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
             create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER))
 
-    failed_rows_pcoll = failed_rows["FailedRows"] | "TupleToDict" >> beam.Map(tuple_to_dict)
+    failed_rows_pcoll = failed_rows["FailedRows"] | "FailedInserts:TupleToDict" >> beam.Map(tuple_to_dict)
 
-    failed_rows_pcoll | "WriteFailedRowsToBigQuery" >> WriteToBigQuery(
+    failed_rows_pcoll | "FailedInserts:WriteToBigQuery" >> WriteToBigQuery(
             known_args.bigquery_table_for_failed_rows,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
             create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER)
