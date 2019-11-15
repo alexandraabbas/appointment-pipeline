@@ -38,9 +38,12 @@ class ValidateMessages(beam.DoFn):
 
 
 class WriteRowsToBigQuery(beam.PTransform):
-    def expand(self, pcoll, table_name=None):
+    def __init__(self, table_name=None):
+        self.table_name = table_name
+
+    def expand(self, pcoll, table_name):
         return pcoll | "WriteToBigQuery" >> WriteToBigQuery(
-            table_name,
+            self.table_name,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
             create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
         )
