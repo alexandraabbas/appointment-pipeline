@@ -41,7 +41,7 @@ class WriteRowsToBigQuery(beam.PTransform):
     def __init__(self, table_name=None):
         self.table_name = table_name
 
-    def expand(self, pcoll, table_name):
+    def expand(self, pcoll):
         return pcoll | "WriteToBigQuery" >> WriteToBigQuery(
             self.table_name,
             write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
