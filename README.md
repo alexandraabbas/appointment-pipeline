@@ -46,7 +46,7 @@ Average appointment duration and average appointment duration by discipline can 
 
 Below screenshot shows the preview of `events_raw` table in BigQuery.
 
-![BigQuery table](imgs/dataflow_dag.png "BigQuery table")
+![BigQuery table](imgs/bigquery_screenshot.png "BigQuery table")
 
 ## Running instructions
 
