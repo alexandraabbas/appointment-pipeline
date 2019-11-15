@@ -22,12 +22,11 @@ Dataflow acts as a glue in this architecture. It reads messages from PubSub and 
 
 ### Apache Beam pipeline design
 
-There are two validation steps performed in the Apache Beam pipeline. One just after reading from PubSub which checks it the message is a valid JSON string. This step would filter out messages like `{ "Type": "AppointmentBooked", "Data": {`. After filtering out invalid messages, valid messages get inserted into a BigQuery table. Unsuccessful inserts are captured and inserted into a separate BigQuery table as a string. Processing steps are shown on the Dataflow DAG below.
+There are two validation steps performed in the Apache Beam pipeline. One just after reading from PubSub which checks if the message is a valid JSON string. This step would filter out messages like `{ "Type": "AppointmentBooked", "Data": {`. After filtering out invalid messages, valid messages get inserted into a BigQuery table. Unsuccessful inserts are captured and inserted into a separate BigQuery table as a string. Processing steps are shown on the Dataflow DAG below.
 
 ![Dataflow DAG](imgs/dataflow_dag.png "Dataflow DAG")
 
-A long living PubSub subscription is used to read from the PubSub topic. By default Beam creates short linging subscriptions for each pipeline run.
-It's beneficial to use a long living subscription since messagages are retained in the subscription after a pipeline is cancelled or failed.
+A long living PubSub subscription is used to read from the PubSub topic. By default Beam creates short linging subscriptions for each pipeline run. It's beneficial to use a long living subscription since messages are retained in the subscription after a pipeline is cancelled or failed.
 
 Finally, I chose Pyhton over Java to develop this streaming pipeline due to the prototype nature of this project and the time constraints. [Java has a lot of benefits over Python when it comes to Dataflow streaming](https://beam.apache.org/documentation/sdks/python-streaming/#unsupported-features). I would probably rewrite the pipeline in Java if I would have to productionise it.
 
@@ -80,7 +79,7 @@ python3 -m streaming_pipeline \
 
 **Handling changing data schema**
 
-Some fields in the incoming JSON messages don't always exist. Fortunately I didn't have to worry to much about this issue since BigQuery can handle the absence of fields if the field type in the table schema is NULLABLE. If a field is abcent in a message BigQuery will automatically inserts null as a value. On the other hand, additional fields can cause issues. Inserts fail when a row has additional fields that don't match the schema. With my current solution these inserts fail on `events_raw` table and will go to the `failed_rows` table.
+Some fields in the incoming JSON messages don't always exist. Fortunately I didn't have to worry to much about this issue since BigQuery can handle the absence of fields if the field type in the table schema is NULLABLE. If a field is absent in a message, BigQuery will automatically insert null as a value. On the other hand, additional fields can cause issues. Inserts fail when a row has additional fields that don't match the schema. With my current solution these inserts fail on `events_raw` table and will go to the `failed_rows` table.
 
 **Handling broken events**
 
