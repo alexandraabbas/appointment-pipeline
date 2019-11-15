@@ -1,11 +1,6 @@
 """
-python -m streaming_pipeline 
-    --subscription=projects/{project}/subscriptions/{subscription}
-    --bigquery_table={project}:{datatset}.{table}
-    --bigquery_table_for_failed_rows={project}:{datatset}.{table}
-    --streaming
+Streaming Apache Beam pipeline to process appointment events from PubSub.
 """
-
 import argparse
 import logging
 import json

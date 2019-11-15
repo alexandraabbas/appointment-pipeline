@@ -1,4 +1,4 @@
-"""Publishes messages to Pub/Sub every minute."""
+"""Publishes messages from file to Pub/Sub every minute."""
 import time
 import argparse
 from google.cloud import pubsub_v1
