@@ -24,7 +24,7 @@ Dataflow acts as a glue in this architecture. It reads messages from PubSub and 
 
 There are two validation steps performed in the Apache Beam pipeline. One just after reading from PubSub which checks it the message is a valid JSON string. This step would filter out messages like `{ "Type": "AppointmentBooked", "Data": {`. After filtering out invalid messages, valid messages get inserted into a BigQuery table. Unsuccessful inserts are captured and inserted into a separate BigQuery table as a string. Processing steps are shown on the Dataflow DAG below.
 
-![Dataflow DAG](imgs/dataflow_dag.png "Dataflow DAG" =400x)
+![Dataflow DAG](imgs/dataflow_dag.png "Dataflow DAG")
 
 A long living PubSub subscription is used to read from the PubSub topic. By default Beam creates short linging subscriptions for each pipeline run.
 It's beneficial to use a long living subscription since messagages are retained in the subscription after a pipeline is cancelled or failed.
