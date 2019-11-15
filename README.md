@@ -1,6 +1,6 @@
 # Appointment streaming pipeline
 
-Apache Beam streaming pipeline built in Python. Takes JSON messages from Cloud PubSub, streams messages to BigQuery after performing a validation step.
+Apache Beam streaming pipeline built in Python 3.7. Takes JSON messages from Cloud PubSub, streams messages to BigQuery after performing a validation step.
 
 ## Solution design
 
@@ -79,9 +79,11 @@ python3 -m streaming_pipeline \
 ## Considerations
 
 **Handling changing data schema**
+
 Some fields in the incoming JSON messages don't always exist. Fortunately I didn't have to worry to much about this issue since BigQuery can handle the absence of fields if the field type in the table schema is NULLABLE. If a field is abcent in a message BigQuery will automatically inserts null as a value. On the other hand, additional fields can cause issues. Inserts fail when a row has additional fields that don't match the schema. With my current solution these inserts fail on `events_raw` table and will go to the `failed_rows` table.
 
 **Handling broken events**
+
 Malformed JSON events are handled by a validation step in the Apache Beam pipeline. These events get inserted into the `failed_rows` BigQuery table as a string.
 
 ## Further improvements
